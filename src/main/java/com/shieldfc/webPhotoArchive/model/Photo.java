@@ -1,6 +1,7 @@
 package com.shieldfc.webPhotoArchive.model;
 
 import lombok.Data;
+import org.hibernate.annotations.Target;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -15,7 +16,7 @@ public class Photo {
 
     private String name;
 
-    private LocalDateTime timestamp;
+    private String timestamp;
 
     private String localPath;
 

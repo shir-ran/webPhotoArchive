@@ -2,7 +2,6 @@ package com.shieldfc.webPhotoArchive.service;
 
 import com.shieldfc.webPhotoArchive.model.Photo;
 import com.shieldfc.webPhotoArchive.repository.PhotoRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,5 +30,9 @@ public class PhotoService {
 
     public void deleteAll(){
         repo.deleteAll();
+    }
+
+    public void saveList(List<Photo> list){
+        list.stream().forEach(photo ->create(photo));
     }
 }
