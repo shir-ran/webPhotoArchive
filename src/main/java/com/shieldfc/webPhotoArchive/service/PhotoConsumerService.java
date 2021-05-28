@@ -12,6 +12,7 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -33,13 +34,15 @@ public class PhotoConsumerService {
         ResponseEntity<String> responseEntity = restTemplate.getForEntity(sourceUrl, String.class);
         String jsonString = responseEntity.getBody();
         ObjectMapper mapper = new ObjectMapper();
-        List<PhotoSource> list = mapper.readValue(jsonString, new TypeReference<List<PhotoSource>>() {
-        });
-        return list;
+        return mapper.readValue(jsonString, new TypeReference<>() {});
     }
 
     public Photo downloadPhoto(PhotoSource source) throws IOException {
-        Photo photo = getPhoto(source);
+        Photo photo = new Photo();
+        photo.setAlbumId(source.getAlbumId());
+        photo.setId(source.getId());
+        photo.setName(source.getTitle());
+        photo.setTimestamp(LocalDateTime.now().toString());
 
         String[] splitString = source.getThumbnailUrl().split("\\.");
         String format = splitString[splitString.length - 1];
@@ -50,18 +53,16 @@ public class PhotoConsumerService {
         File file = new File(localPath);
         ImageIO.write(image, format, file);
 
-        photo.setFileSize(file.getTotalSpace());
+        photo.setFileSize(getFileSize(image));
         photo.setLocalPath(localPath);
         return photo;
     }
 
-    private Photo getPhoto(PhotoSource source) {
-        Photo photo = new Photo();
-        photo.setAlbumId(source.getAlbumId());
-        photo.setId(source.getId());
-        photo.setName(source.getTitle());
-        photo.setTimestamp(LocalDateTime.now().toString());
-        return photo;
+    private long getFileSize(BufferedImage image) throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        boolean resultWrite = ImageIO.write(image, "PNG", bos);
+        byte[] imageInBytes = bos.toByteArray();
+        return imageInBytes.length;
     }
 
 

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Web Photo Archive</title>
+</head>
+<body>
+    <h3>List of all the photos in the archive:</h3>
+<table border="2" >
+    <thead>
+        <tr>
+            <td> Photo name </td>
+            <td> Photo ID </td>
+            <td> Album ID </td>
+        </tr>
+    </thead>
+    <tbody>
+        <tr th:each="photo : ${getAllPhotos}">
+            <td th:text="${photo.name}">name</td>
+            <td th:text="${photo.id}">id</td>
+            <td th:text="${photo.albumId}">album</td>
+        </tr>
+    </tbody>
+</table>
+
+</body>
+</html>

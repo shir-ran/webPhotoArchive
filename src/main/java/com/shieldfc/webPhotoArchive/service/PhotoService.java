@@ -24,6 +24,10 @@ public class PhotoService {
         return repo.getById(id);
     }
 
+    public List<Photo> getPhotosByAlbumId(long albumId){
+        return repo.findAllByAlbumId(albumId);
+    }
+
     public void delete(long id){
         repo.deleteById(id);
     }

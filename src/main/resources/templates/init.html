@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Web Photo Archive</title>
+</head>
+<body>
+    <h1>Web Photo Archive</h1>
+    <h3>The photo archive was initialized successfully.</h3>
+    <table border="2" >
+        <thead>
+        <tr>
+            <td> Number of photos in archive </td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr >
+            <td th:text="${numPhotos}">num</td>
+        </tr>
+        </tbody>
+    </table>
+</body>
+</html>
