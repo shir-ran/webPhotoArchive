@@ -30,26 +30,33 @@ public class PhotoConsumerService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public List<PhotoSource> loadPhotoData() throws JsonProcessingException {
+    public List<PhotoSource> extractPhotosSourceData() throws JsonProcessingException {
         ResponseEntity<String> responseEntity = restTemplate.getForEntity(sourceUrl, String.class);
         String jsonString = responseEntity.getBody();
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(jsonString, new TypeReference<>() {});
     }
 
-    public Photo downloadPhoto(PhotoSource source) throws IOException {
-        Photo photo = Photo.fromPhotoSource(source);
-
+    public Photo handlePhotoInitialization(PhotoSource source) throws IOException {
         String format = getFileFormat(source);
         String localPath = localDirectory + "\\" + source.getUndTitle() + "." + format;
 
-        BufferedImage image = ImageIO.read(new URL(source.getThumbnailUrl()));
-        File file = new File(localPath);
-        ImageIO.write(image, format, file);
+        BufferedImage image = DownloadPhotoFromWeb(source);
+        savePhotoToFile(format, localPath, image);
 
+        Photo photo = Photo.fromPhotoSource(source);
         photo.setFileSize(getFileSize(image));
         photo.setLocalPath(localPath);
         return photo;
+    }
+
+    private void savePhotoToFile(String format, String localPath, BufferedImage image) throws IOException {
+        File file = new File(localPath);
+        ImageIO.write(image, format, file);
+    }
+
+    private BufferedImage DownloadPhotoFromWeb(PhotoSource source) throws IOException {
+        return ImageIO.read(new URL(source.getThumbnailUrl()));
     }
 
     private String getFileFormat(PhotoSource source) {
@@ -72,23 +79,23 @@ public class PhotoConsumerService {
     }
 
     public List<Photo> initializeArchive(StringBuffer errors) {
-        List<PhotoSource> list;
-        List<Photo> fullList = new ArrayList<>();
+        List<PhotoSource> photoSources;
+        List<Photo> photos = new ArrayList<>();
         try {
-            list = loadPhotoData();
-            for (PhotoSource source : list){
+            photoSources = extractPhotosSourceData();
+            for (PhotoSource photoSource : photoSources){
                 try {
-                    fullList.add(downloadPhoto(source));
+                    photos.add(handlePhotoInitialization(photoSource));
                 } catch (IOException e) {
                     e.printStackTrace();
-                    errors.append("Failed getting the data for photo ").append(source.getTitle())
-                            .append(" from url source ").append(source.getThumbnailUrl()).append("\n");
+                    errors.append("Failed getting the data for photo ").append(photoSource.getTitle())
+                            .append(" from url source ").append(photoSource.getThumbnailUrl()).append("\n");
                 }
             }
         } catch (JsonProcessingException e) {
             e.printStackTrace();
             errors.append("Failed getting the photo list from the web.");
         }
-        return fullList;
+        return photos;
     }
 }

@@ -9,13 +9,13 @@
 <table border="2" >
     <thead>
         <tr>
-            <td> Photo name </td>
+            <td> Photo title </td>
             <td> Photo ID </td>
         </tr>
     </thead>
     <tbody>
         <tr th:each="photo : ${albumPhotos}">
-            <td th:text="${photo.name}">name</td>
+            <td th:text="${photo.title}">name</td>
             <td th:text="${photo.id}">id</td>
         </tr>
     </tbody>

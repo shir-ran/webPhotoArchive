@@ -3,12 +3,9 @@ package com.shieldfc.webPhotoArchive.model;
 import lombok.Data;
 
 @Data
-public class PhotoSource {
-    private long albumId;
+public class PhotoSource extends Image {
 
-    private long id;
-
-    private String title;
+    //private String title;
 
     private String url;
 
