@@ -23,4 +23,14 @@ public class Photo {
     private Long fileSize;
 
     private Long albumId;
+
+    public static Photo fromPhotoSource(PhotoSource source){
+        Photo photo = new Photo();
+        photo.setAlbumId(source.getAlbumId());
+        photo.setId(source.getId());
+        photo.setName(source.getTitle());
+        photo.setTimestamp(LocalDateTime.now().toString());
+
+        return photo;
+    }
 }

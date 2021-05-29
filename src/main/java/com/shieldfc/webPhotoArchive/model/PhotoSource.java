@@ -13,4 +13,8 @@ public class PhotoSource {
     private String url;
 
     private String thumbnailUrl;
+
+    public String getUndTitle(){
+        return title.replace(' ','_');
+    }
 }

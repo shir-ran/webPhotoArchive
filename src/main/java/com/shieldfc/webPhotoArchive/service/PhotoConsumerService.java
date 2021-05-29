@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shieldfc.webPhotoArchive.model.Photo;
 import com.shieldfc.webPhotoArchive.model.PhotoSource;
+import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -16,19 +17,18 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class PhotoConsumerService {
-    @Value("${url.photo.source}")
+    @Value("${photo.source.url}")
     private String sourceUrl;
 
-    private String localDirectory = "C:\\develop\\webPhotoArchive\\photos";
+    @Value("${photo.source.file}")
+    private String localDirectory;
 
     private final RestTemplate restTemplate = new RestTemplate();
-
-
 
     public List<PhotoSource> loadPhotoData() throws JsonProcessingException {
         ResponseEntity<String> responseEntity = restTemplate.getForEntity(sourceUrl, String.class);
@@ -38,18 +38,12 @@ public class PhotoConsumerService {
     }
 
     public Photo downloadPhoto(PhotoSource source) throws IOException {
-        Photo photo = new Photo();
-        photo.setAlbumId(source.getAlbumId());
-        photo.setId(source.getId());
-        photo.setName(source.getTitle());
-        photo.setTimestamp(LocalDateTime.now().toString());
+        Photo photo = Photo.fromPhotoSource(source);
 
-        String[] splitString = source.getThumbnailUrl().split("\\.");
-        String format = splitString[splitString.length - 1];
-        String localPath = localDirectory + "\\" + source.getTitle().replace(' ','_') + "." + format;
+        String format = getFileFormat(source);
+        String localPath = localDirectory + "\\" + source.getUndTitle() + "." + format;
 
-        URL url = new URL(source.getThumbnailUrl());
-        BufferedImage image = ImageIO.read(url);
+        BufferedImage image = ImageIO.read(new URL(source.getThumbnailUrl()));
         File file = new File(localPath);
         ImageIO.write(image, format, file);
 
@@ -58,12 +52,43 @@ public class PhotoConsumerService {
         return photo;
     }
 
+    private String getFileFormat(PhotoSource source) {
+        String[] splitString = source.getThumbnailUrl().split("\\.");
+        String format = splitString[splitString.length - 1];
+        format = "jfif".equals(format) ? "jpg": format;
+        return format;
+    }
+
     private long getFileSize(BufferedImage image) throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        boolean resultWrite = ImageIO.write(image, "PNG", bos);
+        ImageIO.write(image, "PNG", bos);
         byte[] imageInBytes = bos.toByteArray();
         return imageInBytes.length;
     }
 
 
+    public void cleanDirectory() throws IOException {
+        FileUtils.cleanDirectory(new File(localDirectory));
+    }
+
+    public List<Photo> initializeArchive(StringBuffer errors) {
+        List<PhotoSource> list;
+        List<Photo> fullList = new ArrayList<>();
+        try {
+            list = loadPhotoData();
+            for (PhotoSource source : list){
+                try {
+                    fullList.add(downloadPhoto(source));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    errors.append("Failed getting the data for photo ").append(source.getTitle())
+                            .append(" from url source ").append(source.getThumbnailUrl()).append("\n");
+                }
+            }
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            errors.append("Failed getting the photo list from the web.");
+        }
+        return fullList;
+    }
 }
